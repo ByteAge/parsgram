@@ -132,6 +132,9 @@ public class AndroidUtilities {
     private static RectF bitmapRect;
 
     public static Pattern WEB_URL = null;
+    public static final int defColor = 0xff92B500;//0xff58BCD5;//0xff43C3DB;//0xff2f8cc9;58BCD5//0xff55abd2
+    public static final String THEME_PREFS = "theme";
+    public static final int THEME_PREFS_MODE = Activity.MODE_PRIVATE;
     static {
         try {
             final String GOOD_IRI_CHAR = "a-zA-Z0-9\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF";
@@ -1206,12 +1209,12 @@ public class AndroidUtilities {
     }*/
 
     public static void checkForCrashes(Activity context) {
-        CrashManager.register(context, BuildVars.DEBUG_VERSION ? BuildVars.HOCKEY_APP_HASH_DEBUG : BuildVars.HOCKEY_APP_HASH, new CrashManagerListener() {
-            @Override
-            public boolean includeDeviceData() {
-                return true;
-            }
-        });
+//        CrashManager.register(context, BuildVars.DEBUG_VERSION ? BuildVars.HOCKEY_APP_HASH_DEBUG : BuildVars.HOCKEY_APP_HASH, new CrashManagerListener() {
+//            @Override
+//            public boolean includeDeviceData() {
+//                return true;
+//            }
+//        });
     }
 
     public static void checkForUpdates(Activity context) {

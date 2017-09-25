@@ -145,7 +145,8 @@ public class ManageSpaceActivity extends Activity implements ActionBarLayout.Act
         actionBarLayout.init(mainFragmentsStack);
         actionBarLayout.setDelegate(this);
 
-        NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeOtherAppActivities, this);
+        if(getIntent().getBooleanExtra("close-other-apps", true))
+            NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeOtherAppActivities, this);
         currentConnectionState = ConnectionsManager.getInstance().getConnectionState();
 
         handleIntent(getIntent(), false, savedInstanceState != null, false);

@@ -72,6 +72,7 @@ import org.telegram.ui.Components.EmbedBottomSheet;
 import org.telegram.ui.Components.PipRoundVideoView;
 import org.telegram.ui.Components.VideoPlayer;
 import org.telegram.ui.PhotoViewer;
+import org.tosan.messenger.Tosan;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -3132,6 +3133,11 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         });
     }
 
+    private WeakReference<Context> context;
+    public void setContext(Context c){
+        context=new WeakReference<>(c);
+    }
+
     private void stopRecordingInternal(final int send) {
         if (send != 0) {
             final TLRPC.TL_document audioToSend = recordingAudio;
@@ -3156,7 +3162,16 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                             audioToSend.attributes.add(attributeAudio);
                             if (duration > 700) {
                                 if (send == 1) {
-                                    SendMessagesHelper.getInstance().sendMessage(audioToSend, null, recordingAudioFileToSend.getAbsolutePath(), recordDialogId, recordReplyingMessageObject, null, null, 0);
+                                    if(context==null || context.get()==null){
+                                        SendMessagesHelper.getInstance().sendMessage(audioToSend, null, recordingAudioFileToSend.getAbsolutePath(), recordDialogId, recordReplyingMessageObject, null, null, 0);
+                                    }else{
+                                        Tosan.showMediaSendConfirmation(context.get(), new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                SendMessagesHelper.getInstance().sendMessage(audioToSend, null, recordingAudioFileToSend.getAbsolutePath(), recordDialogId, recordReplyingMessageObject, null, null, 0);
+                                            }
+                                        });
+                                    }
                                 }
                                 NotificationCenter.getInstance().postNotificationName(NotificationCenter.audioDidSent, send == 2 ? audioToSend : null, send == 2 ? recordingAudioFileToSend.getAbsolutePath() : null);
                             } else {

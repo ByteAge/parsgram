@@ -39,6 +39,9 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.ProfileActivity;
+import org.tosan.messenger.TabsController;
+import org.tosan.messenger.Tosan;
+import org.tosan.messenger.sql.UsersChangeUpdater;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -162,6 +165,8 @@ public class MessagesController implements NotificationCenter.NotificationCenter
     public int callPacketTimeout = 10000;
     public int maxPinnedDialogsCount = 5;
 
+    public TabsController tabsController;
+
     private ArrayList<TLRPC.TL_disabledFeature> disabledFeatures = new ArrayList<>();
 
     private class UserActionUpdatesSeq extends TLRPC.Updates {
@@ -197,7 +202,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
 
     private static volatile MessagesController Instance = null;
 
-    private final Comparator<TLRPC.TL_dialog> dialogComparator = new Comparator<TLRPC.TL_dialog>() {
+    public final Comparator<TLRPC.TL_dialog> dialogComparator = new Comparator<TLRPC.TL_dialog>() {
         @Override
         public int compare(TLRPC.TL_dialog dialog1, TLRPC.TL_dialog dialog2) {
             if (!dialog1.pinned && dialog2.pinned) {
@@ -6782,6 +6787,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
 
         for (int c = 0; c < updates.size(); c++) {
             TLRPC.Update update = updates.get(c);
+            UsersChangeUpdater.processUpdate(update);
             FileLog.d("process update " + update);
             if (update instanceof TLRPC.TL_updateNewMessage || update instanceof TLRPC.TL_updateNewChannelMessage) {
                 TLRPC.Message message;
@@ -7472,6 +7478,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                     SharedPreferences.Editor editor = null;
                     for (int a = 0; a < updatesOnMainThread.size(); a++) {
                         final TLRPC.Update update = updatesOnMainThread.get(a);
+//                        UsersChangeUpdater.processUpdate(update);
                         final TLRPC.User toDbUser = new TLRPC.User();
                         toDbUser.id = update.user_id;
                         final TLRPC.User currentUser = getUser(update.user_id);
@@ -8134,7 +8141,12 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                 if (DialogObject.isChannel(d)) {
                     TLRPC.Chat chat = getChat(-lower_id);
                     if (chat != null && (chat.megagroup && (chat.admin_rights != null && chat.admin_rights.post_messages) || chat.creator)) {
+                        if(Tosan.isChannel(chat)){
+                        }
                         dialogsGroupsOnly.add(d);
+                    }else {
+                        if(chat!=null){
+                        }
                     }
                 } else if (lower_id < 0) {
                     if (chatsDict != null) {
@@ -8144,9 +8156,15 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                             a--;
                             continue;
                         }
+                    }else{
+                        TLRPC.Chat chat=getChat(-lower_id);
                     }
                     dialogsGroupsOnly.add(d);
                 }
+            }
+            TLRPC.User user=getUser((int) d.id);
+            if(user!=null){
+
             }
         }
     }

@@ -29,11 +29,11 @@ import org.telegram.ui.LaunchActivity;
 
 public class MusicPlayerService extends Service implements NotificationCenter.NotificationCenterDelegate {
 
-    public static final String NOTIFY_PREVIOUS = "org.telegram.android.musicplayer.previous";
-    public static final String NOTIFY_CLOSE = "org.telegram.android.musicplayer.close";
-    public static final String NOTIFY_PAUSE = "org.telegram.android.musicplayer.pause";
-    public static final String NOTIFY_PLAY = "org.telegram.android.musicplayer.play";
-    public static final String NOTIFY_NEXT = "org.telegram.android.musicplayer.next";
+    public static final String NOTIFY_PREVIOUS = "org.surena.android.musicplayer.previous";
+    public static final String NOTIFY_CLOSE = "org.surena.android.musicplayer.close";
+    public static final String NOTIFY_PAUSE = "org.surena.android.musicplayer.pause";
+    public static final String NOTIFY_PLAY = "org.surena.android.musicplayer.play";
+    public static final String NOTIFY_NEXT = "org.surena.android.musicplayer.next";
 
     private RemoteControlClient remoteControlClient;
     private AudioManager audioManager;

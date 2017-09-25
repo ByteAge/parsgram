@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#efefef"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:layout_height="wrap_content">
+
+        <ImageView android:src="@mipmap/ic_launcher"
+            android:layout_width="84dp"
+            android:layout_marginTop="48dp"
+            android:layout_height="84dp" />
+
+
+        <TextView android:text="@string/AppName"
+            android:layout_width="wrap_content"
+            android:textColor="#999999"
+            android:layout_marginTop="16dp"
+            android:textSize="19sp"
+            android:layout_height="wrap_content" />
+        <TextView android:textColor="#999999"
+            android:id="@+id/versionTV"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+        <LinearLayout android:orientation="vertical"
+            android:layout_margin="16dp"
+            android:padding="1dp"
+            android:background="#999999"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <LinearLayout android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:padding="12dp"
+                android:id="@+id/rateUs"
+                android:background="#fff"
+                android:layout_height="wrap_content">
+                <ImageView android:layout_gravity="center_vertical"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp" />
+                <TextView android:layout_gravity="center"
+                    android:gravity="right"
+                    android:textSize="19sp"
+                    android:text="به برنامه امتیاز دهید"
+                    android:textColor="#000"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:padding="12dp"
+                android:background="#fff"
+                android:id="@+id/parsgramChannel"
+                android:layout_marginTop="1dp"
+                android:layout_height="wrap_content">
+                <ImageView android:layout_gravity="center_vertical"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp" />
+                <TextView android:layout_gravity="center"
+                    android:gravity="right"
+                    android:textSize="19sp"
+                    android:text="کانال رسمی پارس گرام"
+                    android:textColor="#000"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:padding="12dp"
+                android:id="@+id/callUs"
+                android:background="#fff"
+                android:layout_marginTop="1dp"
+                android:layout_height="wrap_content">
+                <ImageView android:layout_gravity="center_vertical"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp" />
+                <LinearLayout android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView android:layout_gravity="center"
+                        android:gravity="right"
+                        android:textSize="19sp"
+                        android:text="تماس با ما"
+                        android:textColor="#000"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <TextView android:layout_gravity="center"
+                        android:gravity="right"
+                        android:textSize="14sp"
+                        android:text="abednoorizadeh73@gmail.com"
+                        android:textColor="#999999"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+
+        </LinearLayout>
+
+
+        <TextView android:gravity="center" android:layout_marginTop="48dp"
+            android:textColor="#999999"
+            android:textSize="14sp"
+            android:text="Copyright @ 2017 RbT-Developer\nAll Rights Reserved"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</ScrollView>

@@ -24,6 +24,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.tosan.messenger.Tosan;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.io.BufferedWriter;
@@ -192,6 +193,7 @@ public class LocaleController {
         addRules(new String[]{"lag"}, new PluralRules_Langi());
         addRules(new String[]{"shi"}, new PluralRules_Tachelhit());
         addRules(new String[]{"mt"}, new PluralRules_Maltese());
+        addRules(new String[]{"fa"}, new PluralRules_Persian());
         addRules(new String[]{"ga", "se", "sma", "smi", "smj", "smn", "sms"}, new PluralRules_Two());
         addRules(new String[]{"ak", "am", "bh", "fil", "tl", "guw", "hi", "ln", "mg", "nso", "ti", "wa"}, new PluralRules_Zero());
         addRules(new String[]{"az", "bm", "fa", "ig", "hu", "ja", "kde", "kea", "ko", "my", "ses", "sg", "to",
@@ -265,6 +267,14 @@ public class LocaleController {
         localeInfo.shortName = "ko";
         localeInfo.pathToFile = null;
         localeInfo.builtIn = true;
+        languages.add(localeInfo);
+        languagesDict.put(localeInfo.shortName, localeInfo);
+
+        localeInfo = new LocaleInfo();
+        localeInfo.name = "فارسی";
+        localeInfo.nameEnglish = "Persian";
+        localeInfo.shortName = "fa";
+        localeInfo.pathToFile = null;
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 
@@ -1110,7 +1120,7 @@ public class LocaleController {
         if (lang == null) {
             lang = "en";
         }
-        isRTL = lang.toLowerCase().equals("ar");
+        isRTL = lang.toLowerCase().equals("ar") || lang.toLowerCase().equals("fa");
         nameDisplayOrder = lang.toLowerCase().equals("ko") ? 2 : 1;
 
         formatterMonth = createFormatter(locale, getStringInternal("formatterMonth", R.string.formatterMonth), "dd MMM");
@@ -1120,7 +1130,7 @@ public class LocaleController {
         chatFullDate = createFormatter(locale, getStringInternal("chatFullDate", R.string.chatFullDate), "d MMMM yyyy");
         formatterWeek = createFormatter(locale, getStringInternal("formatterWeek", R.string.formatterWeek), "EEE");
         formatterMonthYear = createFormatter(locale, getStringInternal("formatterMonthYear", R.string.formatterMonthYear), "MMMM yyyy");
-        formatterDay = createFormatter(lang.toLowerCase().equals("ar") || lang.toLowerCase().equals("ko") ? locale : Locale.US, is24HourFormat ? getStringInternal("formatterDay24H", R.string.formatterDay24H) : getStringInternal("formatterDay12H", R.string.formatterDay12H), is24HourFormat ? "HH:mm" : "h:mm a");
+        formatterDay = createFormatter(lang.toLowerCase().equals("ar") || lang.toLowerCase().equals("fa") || lang.toLowerCase().equals("ko") ? locale : Locale.US, is24HourFormat ? getStringInternal("formatterDay24H", R.string.formatterDay24H) : getStringInternal("formatterDay12H", R.string.formatterDay12H), is24HourFormat ? "HH:mm" : "h:mm a");
         formatterStats = createFormatter(locale, is24HourFormat ? getStringInternal("formatterStats24H", R.string.formatterStats24H) : getStringInternal("formatterStats12H", R.string.formatterStats12H), is24HourFormat ? "MMM dd yyyy, HH:mm" : "MMM dd yyyy, h:mm a");
         formatterBannedUntil = createFormatter(locale, is24HourFormat ? getStringInternal("formatterBannedUntil24H", R.string.formatterBannedUntil24H) : getStringInternal("formatterBannedUntil12H", R.string.formatterBannedUntil12H), is24HourFormat ? "MMM dd yyyy, HH:mm" : "MMM dd yyyy, h:mm a");
         formatterBannedUntilThisYear = createFormatter(locale, is24HourFormat ? getStringInternal("formatterBannedUntilThisYear24H", R.string.formatterBannedUntilThisYear24H) : getStringInternal("formatterBannedUntilThisYear12H", R.string.formatterBannedUntilThisYear12H), is24HourFormat ? "MMM dd, HH:mm" : "MMM dd, h:mm a");
@@ -1176,6 +1186,11 @@ public class LocaleController {
     }
 
     public static String formatShortNumber(int number, int[] rounded) {
+        if(Tosan.prefs.getBoolean(Tosan.keY_real_members_count, true)){
+            if(rounded!=null)
+                rounded[0]=number;
+            return String.format("%,d", number);
+        }
         String K = "";
         int lastDec = 0;
         int KCount = 0;
@@ -2196,7 +2211,28 @@ public class LocaleController {
             }
         }
     }
-
+    public static class PluralRules_Persian extends LocaleController.PluralRules {
+        public int quantityForNumber(int paramInt)
+        {
+            int i = paramInt % 100;
+            if (paramInt == 0) {
+                return 1;
+            }
+            if (paramInt == 1) {
+                return 2;
+            }
+            if (paramInt == 2) {
+                return 4;
+            }
+            if ((i >= 3) && (i <= 10)) {
+                return 8;
+            }
+            if ((i >= 11) && (i <= 99)) {
+                return 16;
+            }
+            return 0;
+        }
+    }
     public static class PluralRules_Balkan extends PluralRules {
         public int quantityForNumber(int count) {
             int rem100 = count % 100;

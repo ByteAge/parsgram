@@ -3,8 +3,8 @@
 
 
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Parsgram</string>
+    <string name="AppNameBeta">Parsgram</string>
     <string name="LanguageName">English</string>
     <string name="English">English</string>
     <string name="LanguageNameInEnglish">English</string>
@@ -512,7 +512,7 @@
     <string name="CopyUrl">Copy URL</string>
     <string name="SendItems">Send %1$s</string>
     <string name="SendAsFile">Send as file</string>
-    <string name="SendAsFiles">Send as files</string>
+    <string name="SendAsFiles">Send as file</string>
     <string name="OpenUrlAlert">Open url %1$s?</string>
     <string name="BotPermissionGameAlert">Allow %1$s to pass your Telegram name and id (not your phone number) to pages you open with this bot?</string>
     <string name="ReportSpam">REPORT SPAM</string>
@@ -663,7 +663,7 @@
     <!--contacts view-->
     <string name="SelectContact">Select Contact</string>
     <string name="NoContacts">No contacts yet</string>
-    <string name="InviteText">Hey, let\'s switch to Telegram: https://telegram.org/dl</string>
+    <string name="InviteText">Hey, let\'s switch to Parsgram: https://play.google.com/store/apps/details?id=org.surena.parsgram</string>
     <string name="TodayAt">at</string>
     <string name="YesterdayAt">yesterday at</string>
     <string name="Online">online</string>
@@ -1401,7 +1401,7 @@
     <string name="PermissionDrawAboveOtherApps">Telegram needs access to draw above other apps to play videos in Picture-in-Picture mode.</string>
     <string name="PermissionOpenSettings">SETTINGS</string>
     <!--Intro view-->
-    <string name="Page1Title">Telegram</string>
+    <string name="Page1Title">Parsgram</string>
     <string name="Page2Title">Fast</string>
     <string name="Page3Title">Free</string>
     <string name="Page4Title">Secure</string>
@@ -1720,4 +1720,100 @@
     <string name="formatterDay24H">HH:mm</string>
     <string name="formatterDay12H">h:mm a</string>
     <string name="formatDateAtTime">%1$s at %2$s</string>
+
+
+
+    <!-- ramin -->
+    <string name="SetChatMarker">Set Chat Marker</string>
+    <string name="DeleteChatMarker">Delete Chat Marker</string>
+    <string name="GoToChatMarkerEmpty">"With this feature you can mark chats on one message. (like marking books for reading next time)
+There isn't any marker for this chat.
+To set chat marker on a message, tap it and choose \"Set Chat Marker\"."</string>
+    <string name="GoToChatMarker">Go to Chat Marker</string>
+    <string name="NoChatsHiddenHelp">Press and hold on a chat you want to hide\n
+    a menu will open\n
+    and then select Hide</string>
+    <string name="ReportHelpTitle">Fix Reports</string>
+    <string name="Hide">Hide</string>
+    <string name="UnHide">Unhide</string>
+    <string name="IdFinderTitle">ID Finder</string>
+    <string name="ProtectedChatsTitle">Protected chats</string>
+    <string name="ParsgramSettings">Parsgram settings</string>
+    <string name="ForwardMultiple">Multiple forward</string>
+    <string name="AdvancedForward">Forward pro</string>
+    <string name="UsernameNotExists">Username does not exist</string>
+    <string name="IdFinderHelp">Find users, channels and bots with ParsGram ID Finder easily.</string>
+    <string name="AddFavor">Add to favorites</string>
+    <string name="RemoveFavor">Remove from favorites</string>
+
+
+    <string name="ForwardNoQuote">Forward without quoting</string>
+    <string name="LeaveWithoutDelete">Leave with return possibility</string>
+    <string name="LeaveWithoutDeleteMsg">Leave without delete group?</string>
+    <string name="ReturnToThisGroup">Return To This Group</string>
+    <string name="ReturnToThisGroupMsg">Return to this group?</string>
+
+    <string name="send_email">Send Mail Via..</string>
+
+    <string name="ReportProblemHelp">Report Problem Help</string>
+    <string name="ReportProblemHelpDetail1">سوال : چه اتفاقی برای حساب تلگرامی من افتاده؟</string>
+    <string name="ReportProblemHelpDetail10">متاسفانه مشخص نیست. ممکن است بین یک هفته تا چند ماه این مشکل وجود داشته باشد.</string>
+    <string name="ReportProblemHelpDetail11">سوال : هیچ راه حل دیگه ای نداره؟</string>
+    <string name="ReportProblemHelpDetail12">"متاسفانه تنها روشی که تلگرام در سایت خود ارائه داده است همین ارسال ایمیل می باشد.
+برخی کاربران راه حلهای مختلفی را تست کرده اند و بعضا به نتیجه نیز رسیده اند.
+    "</string>
+    <string name="ReportProblemHelpDetail2">زمانی که تعدادی از کاربران پیامهای ناخواسته از یک حساب را گزارش می کنند، تلگرام یک محدودیت برای این حساب اعمال می کند: حساب های گزارش شده فقط می توانند به افرادی که شماره آنها را دارند پیام ارسال کنند. تلگرام این محدودیت را برای جلوگیری از تبلیغات و آرامش بیشتر کاربران اعمال کرده است.</string>
+    <string name="ReportProblemHelpDetail3">سوال : حالا باید چیکار کنم؟</string>
+    <string name="ReportProblemHelpDetail4">اگر این اتفاق برای اولین بار است که برای شما افتاده است، به احتمال زیاد حساب شما بعد از حدود یک هفته یا بیشتر از این محدودیت خارج خواهد شد. تکرار این اتفاق مدت بیشتری شما را محدود خواهد کرد و اگر به ارسال پیامهای ناخواسته ادامه دهید ممکن است این محدودیت برای شما برای همیشه اعمال شود.</string>
+    <string name="ReportProblemHelpDetail5">سوال : من مطمئنم که اشتباهی رخ داده و این محدودیت به اشتباه بر روی حساب من اعمال شده است.</string>
+    <string name="ReportProblemHelpDetail6">تلگرام در تازه ترین بروزرسانی خود ربات spambot@ (اسپم بوت) را برای رفع مشکل ریپورت اسپم کاربران راه اندازی کرده است و شما دیگر نیازی نیست برای حل مشکل خود به تلگرام ایمیل خارج شدن از حالت ریپورت اسپم ارسال کنید."</string>
+    <string name="ReportProblemHelpDetail7">ابتدا از گزینه بالای صفحه وارد ربات اسپم بوت شوید</string>
+    <string name="ReportProblemHelpDetail8">پس از انتخاب گزینه start ، از منوی باز شده گزینه”!this is a mistake ” را انتخاب کنید.</string>
+    <string name="ReportProblemHelpDetail9">سپس گزینه ” yes” را انتخاب کنید.</string>
+    <string name="ReportProblemHelpDetail20">در صفحه جدید با انتخاب گزینه “!No i’ll never do any of this” تایید کنید که هیچ فعالیتی که باعث اذیت دیگران شود، انجام نخواهید داد.</string>
+    <string name="ReportProblemHelpDetail21">در پایان متن کوتاه زیر به زبان انگلیسی را برای مدیران تلگرام ارسال کنید.(از گزینه کپی در بالای صفحه به راحتی متن را کپی نمایید و سپس در اسپم بوت پیست کنید)</string>
+    <string name="ReportProblemHelpDetail22">Dear Telegram Support
+.My Telegram account has been spammed suddenly and I cannot send message to any contacts whom I don’t have their number, if I am the chat starter
+.Kindly help to fix the issue and remove the spam report
+.Best Regards</string>
+    <string name="ReportProblemHelpDetail23">ربات spambot@ دقیقا اعلام خواهد کرد به چه علتی اسپم شده اید و اگر محدودیت شما دائمی نباشد تاریخ رفع محدودیت اعلام خواهد شد.\n\n</string>
+    <string name="ReportSpamEmailContent">"Hello, Dear Support Team,
+
+There is some problem with my telegram account.
+Some friends report me as a spammer wrongly and i found an unfair limitation on my account.
+Please solve my problem.
+
+My Phone Number: %1$s
+My Telegram ID: %2$s
+
+I look forward to hearing from you very soon.
+
+Best Regards."</string>
+
+
+    <string name="ContactChanges">Contact changes</string>
+    <string name="AboutParsgram">About parsgram</string>
+    <string name="ParsgramChannel">Parsgram official channel</string>
+    <string name="MarkAsRead">Mark as read</string>
+    <string name="SaveToCloud">Save to cloud</string>
+    <string name="CatNameHint">Category name</string>
+    <string name="ShowTabs">Show Tabs</string>
+    <string name="UiSettings">Ui Settings</string>
+    <string name="ParsgramVersionInfo">Parsgram  %1$s</string>
+    <string name="OnlineContacts">Online contacts</string>
+    <string name="ProtectedChat">Protected Chat</string>
+    <string name="CategoryManagement">Category management</string>
+    <string name="NewCatTitle">New category</string>
+    <string name="CatNameEmptyMessage">Category name cannot be empty.</string>
+    <string name="AdCatHelpText">Choose a name to create a new category.\nNames must be unique.</string>
+    <string name="AdCatAlreadyExistsMessage">A category with this name already exists.\n\nPlease enter another name.</string>
+
+    <string name="GoToFirstMessage">Go to first message</string>
+    <string name="ConfirmStickerAndVoice">Confirm stickers and voice before sending</string>
+    <string name="HidePhoneNumber">Hide phone number</string>
+    <string name="ShowExactMembersCount">Show exact channels members count</string>
+    <string name="VacuumCleaner">Vacuum cleaner</string>
+    <string name="SmartSecretary">Smart secretary</string>
+
+    <string name="Hidden">Hidden</string>
 </resources>

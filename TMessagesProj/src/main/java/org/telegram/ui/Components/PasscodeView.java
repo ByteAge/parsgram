@@ -47,12 +47,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.support.fingerprint.FingerprintManagerCompat;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
@@ -64,6 +62,11 @@ public class PasscodeView extends FrameLayout {
 
     public interface PasscodeViewDelegate {
         void didAcceptedPassword();
+        boolean checkPasscode(String password);
+        // 0 = pin
+        // 1 = text
+        int getPasswordType();
+        boolean useFingerPrint();
     }
 
     private class AnimatingTextView extends FrameLayout {
@@ -526,7 +529,7 @@ public class PasscodeView extends FrameLayout {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (passwordEditText.length() == 4 && UserConfig.passcodeType == 0) {
+                if (passwordEditText.length() == 4 && delegate.getPasswordType() == 0) {
                     processDone(false);
                 }
             }
@@ -733,16 +736,17 @@ public class PasscodeView extends FrameLayout {
     private void processDone(boolean fingerprint) {
         if (!fingerprint) {
             String password = "";
-            if (UserConfig.passcodeType == 0) {
+            int passcodeType=delegate.getPasswordType();
+            if (passcodeType == 0) {
                 password = passwordEditText2.getString();
-            } else if (UserConfig.passcodeType == 1) {
+            } else if (passcodeType == 1) {
                 password = passwordEditText.getText().toString();
             }
             if (password.length() == 0) {
                 onPasscodeError();
                 return;
             }
-            if (!UserConfig.checkPasscode(password)) {
+            if (!delegate.checkPasscode(password)) {
                 passwordEditText.setText("");
                 passwordEditText2.eraseAllCharacters(true);
                 onPasscodeError();
@@ -765,9 +769,7 @@ public class PasscodeView extends FrameLayout {
         });
         AnimatorSet.start();
 
-        UserConfig.appLocked = false;
-        UserConfig.saveConfig(false);
-        NotificationCenter.getInstance().postNotificationName(NotificationCenter.didSetPasscode);
+
         setOnTouchListener(null);
         if (delegate != null) {
             delegate.didAcceptedPassword();
@@ -799,7 +801,7 @@ public class PasscodeView extends FrameLayout {
     }
 
     public void onResume() {
-        if (UserConfig.passcodeType == 1) {
+        if (delegate.getPasswordType() == 1) {
             if (passwordEditText != null) {
                 passwordEditText.requestFocus();
                 AndroidUtilities.showKeyboard(passwordEditText);
@@ -840,7 +842,7 @@ public class PasscodeView extends FrameLayout {
 
     private void checkFingerprint() {
         Activity parentActivity = (Activity) getContext();
-        if (Build.VERSION.SDK_INT >= 23 && parentActivity != null && UserConfig.useFingerprint && !ApplicationLoader.mainInterfacePaused) {
+        if (Build.VERSION.SDK_INT >= 23 && parentActivity != null && delegate.useFingerPrint() && !ApplicationLoader.mainInterfacePaused) {
             try {
                 if (fingerprintDialog != null && fingerprintDialog.isShowing()) {
                     return;
@@ -950,7 +952,7 @@ public class PasscodeView extends FrameLayout {
 
     public void onShow() {
         Activity parentActivity = (Activity) getContext();
-        if (UserConfig.passcodeType == 1) {
+        if (delegate.getPasswordType() == 1) {
             if (passwordEditText != null) {
                 passwordEditText.requestFocus();
                 AndroidUtilities.showKeyboard(passwordEditText);
@@ -985,7 +987,7 @@ public class PasscodeView extends FrameLayout {
 
         passcodeTextView.setText(LocaleController.getString("EnterYourPasscode", R.string.EnterYourPasscode));
 
-        if (UserConfig.passcodeType == 0) {
+        if (delegate.getPasswordType() == 0) {
             //InputFilter[] filterArray = new InputFilter[1];
             //filterArray[0] = new InputFilter.LengthFilter(4);
             //passwordEditText.setFilters(filterArray);
@@ -996,7 +998,7 @@ public class PasscodeView extends FrameLayout {
             passwordEditText.setVisibility(GONE);
             passwordEditText2.setVisibility(VISIBLE);
             checkImage.setVisibility(GONE);
-        } else if (UserConfig.passcodeType == 1) {
+        } else if (delegate.getPasswordType() == 1) {
             passwordEditText.setFilters(new InputFilter[0]);
             passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             numbersFrameLayout.setVisibility(GONE);
@@ -1039,7 +1041,7 @@ public class PasscodeView extends FrameLayout {
 
         if (!AndroidUtilities.isTablet() && getContext().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             layoutParams = (LayoutParams) passwordFrameLayout.getLayoutParams();
-            layoutParams.width = UserConfig.passcodeType == 0 ? width / 2 : width;
+            layoutParams.width = delegate.getPasswordType() == 0 ? width / 2 : width;
             layoutParams.height = AndroidUtilities.dp(140);
             layoutParams.topMargin = (height - AndroidUtilities.dp(140)) / 2;
             passwordFrameLayout.setLayoutParams(layoutParams);
@@ -1130,7 +1132,7 @@ public class PasscodeView extends FrameLayout {
         getWindowVisibleDisplayFrame(rect);
         keyboardHeight = usableViewHeight - (rect.bottom - rect.top);
 
-        if (UserConfig.passcodeType == 1 && (AndroidUtilities.isTablet() || getContext().getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE)) {
+        if (delegate.getPasswordType() == 1 && (AndroidUtilities.isTablet() || getContext().getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE)) {
             int t = 0;
             if (passwordFrameLayout.getTag() != null) {
                 t = (Integer) passwordFrameLayout.getTag();

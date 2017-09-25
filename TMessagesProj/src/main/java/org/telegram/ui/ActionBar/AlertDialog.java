@@ -755,6 +755,10 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
             return this;
         }
 
+        public TextView getAlertDialogTitleTextView() {
+            return alertDialog.titleTextView;
+        }
+
         public Builder setSubtitle(CharSequence subtitle) {
             alertDialog.subtitle = subtitle;
             return this;

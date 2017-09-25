@@ -29,6 +29,8 @@ import android.widget.TextView;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
@@ -37,8 +39,9 @@ import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.ActionBar.Theme;
+import org.tosan.messenger.Tosan;
 
-public class DrawerProfileCell extends FrameLayout {
+public class DrawerProfileCell extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
 
     private BackupImageView avatarImageView;
     private TextView nameTextView;
@@ -51,6 +54,33 @@ public class DrawerProfileCell extends FrameLayout {
     private Integer currentColor;
     private Drawable cloudDrawable;
     private int lastCloudColor;
+    private String phone;
+
+    @Override
+    public void didReceivedNotification(int id, Object... args) {
+        if(id==NotificationCenter.tosanConfigsChanged){
+            if(Tosan.key_hide_phone.equals(args[0])){
+                boolean hidePhone= (boolean) args[1];
+                if(hidePhone){
+                    phoneTextView.setText(LocaleController.getString("Hidden", R.string.Hidden));
+                }else{
+                    phoneTextView.setText(phone);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        NotificationCenter.getInstance().addObserver(this, NotificationCenter.tosanConfigsChanged);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        NotificationCenter.getInstance().removeObserver(this, NotificationCenter.tosanConfigsChanged);
+    }
 
     private class CloudView extends View {
 
@@ -184,10 +214,13 @@ public class DrawerProfileCell extends FrameLayout {
             photo = user.photo.photo_small;
         }
         nameTextView.setText(UserObject.getUserName(user));
-        phoneTextView.setText(PhoneFormat.getInstance().format("+" + user.phone));
+        phoneTextView.setText(phone=PhoneFormat.getInstance().format("+" + user.phone));
         AvatarDrawable avatarDrawable = new AvatarDrawable(user);
         avatarDrawable.setColor(Theme.getColor(Theme.key_avatar_backgroundInProfileBlue));
         avatarImageView.setImage(photo, "50_50", avatarDrawable);
+
+        // update phone hiddenity
+        didReceivedNotification(NotificationCenter.tosanConfigsChanged, Tosan.key_hide_phone, Tosan.prefs.getBoolean(Tosan.key_hide_phone, false));
     }
 
     @Override

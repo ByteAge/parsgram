@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "590369248904",
+    "firebase_url": "https://parsgram-a4466.firebaseio.com",
+    "project_id": "parsgram-a4466",
+    "storage_bucket": "parsgram-a4466.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:590369248904:android:662b68fbdaeacd27",
+        "android_client_info": {
+          "package_name": "org.surena.parsgram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "590369248904-3facfji1b0gobgrh3f3654bg9bh8lg13.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChsVU8E7G-I5DYSyEgw0LN8-uU7RkLpvo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

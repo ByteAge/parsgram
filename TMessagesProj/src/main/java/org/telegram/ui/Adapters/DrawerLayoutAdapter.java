@@ -95,7 +95,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             return 0;
         } else if (i == 1) {
             return 1;
-        } else if (i == 5) {
+        } else if (i == 5 || i==15) {
             return 2;
         }
         return 3;
@@ -111,6 +111,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         items.add(new Item(2, LocaleController.getString("NewGroup", R.string.NewGroup), R.drawable.menu_newgroup));
         items.add(new Item(3, LocaleController.getString("NewSecretChat", R.string.NewSecretChat), R.drawable.menu_secret));
         items.add(new Item(4, LocaleController.getString("NewChannel", R.string.NewChannel), R.drawable.menu_broadcast));
+        items.add(null); // divider
+        items.add(new Item(20, LocaleController.getString("IdFinderTitle", R.string.IdFinderTitle), R.drawable.pg_drawer_idfinder));
+        items.add(new Item(21, LocaleController.getString("ReportHelpTitle", R.string.ReportHelpTitle), R.drawable.pg_drawer_fixreport));
+        items.add(new Item(24, LocaleController.getString("OnlineContacts", R.string.OnlineContacts), R.drawable.menu_contacts));
+        items.add(new Item(28, LocaleController.getString("ContactChanges", R.string.ContactChanges), R.drawable.menu_contacts));
+        items.add(new Item(25, LocaleController.getString("CategoryManagement", R.string.CategoryManagement), R.drawable.pg_drawer_categories));
+        items.add(new Item(26, LocaleController.getString("ParsgramChannel", R.string.ParsgramChannel), R.drawable.menu_broadcast));
+        items.add(new Item(29, LocaleController.getString("VacuumCleaner", R.string.VacuumCleaner), R.drawable.pg_drawer_sweep));
+        items.add(new Item(23, LocaleController.getString("ParsgramSettings", R.string.ParsgramSettings), R.drawable.menu_settings));
+        items.add(new Item(27, LocaleController.getString("AboutParsgram", R.string.AboutParsgram), R.drawable.menu_help));
         items.add(null); // divider
         items.add(new Item(6, LocaleController.getString("Contacts", R.string.Contacts), R.drawable.menu_contacts));
         if (MessagesController.getInstance().callsEnabled) {

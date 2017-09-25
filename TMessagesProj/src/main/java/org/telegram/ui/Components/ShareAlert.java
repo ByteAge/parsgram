@@ -61,11 +61,14 @@ import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.ShareDialogCell;
 import org.telegram.ui.DialogsActivity;
+import org.tosan.messenger.Tosan;
+import org.tosan.messenger.ui.TabsWidget;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -97,12 +100,40 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
     private boolean copyLinkOnEnd;
 
     private boolean isPublicChannel;
+    private boolean showShareTabs= Tosan.prefs.getBoolean(Tosan.key_enable_tabs, true);
+    private TabsWidget tabsWidget;
     private String linkToCopy;
 
     private int scrollOffsetY;
     private int topBeforeSwitch;
 
+    private void resolveTabsPosition(){
+        if(!showShareTabs)
+            return;
+        FrameLayout.LayoutParams params= (FrameLayout.LayoutParams) frameLayout.getLayoutParams();
+        if(gridView.getAdapter()==searchAdapter){
+            params.height=AndroidUtilities.dp(48);
+            tabsWidget.setVisibility(View.GONE);
+        }else{
+            params.height=AndroidUtilities.dp(48+40);
+            tabsWidget.setVisibility(View.VISIBLE);
+        }
+        frameLayout.setLayoutParams(params);
+
+        boolean showShareTabs=gridView.getAdapter()==listAdapter;
+
+        params= (FrameLayout.LayoutParams) shadow.getLayoutParams();
+        params.topMargin=AndroidUtilities.dp(showShareTabs ? 48+40:48);
+        shadow.setLayoutParams(params);
+        params= (FrameLayout.LayoutParams) gridView.getLayoutParams();
+        params.topMargin=AndroidUtilities.dp(showShareTabs ? 48+40:48);
+        gridView.setLayoutParams(params);
+    }
+
     public ShareAlert(final Context context, MessageObject messageObject, final String text, boolean publicChannel, final String copyLink, boolean fullScreen) {
+        this(context, messageObject, text, publicChannel, copyLink, fullScreen, false);
+    }
+    public ShareAlert(final Context context, MessageObject messageObject, final String text, boolean publicChannel, final String copyLink, boolean fullScreen, final boolean noQuote) {
         super(context, true);
 
         shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow).mutate();
@@ -209,7 +240,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         doneButton.setOrientation(LinearLayout.HORIZONTAL);
         doneButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_dialogButtonSelector), 0));
         doneButton.setPadding(AndroidUtilities.dp(21), 0, AndroidUtilities.dp(21), 0);
-        frameLayout.addView(doneButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.RIGHT));
+        frameLayout.addView(doneButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.TOP | Gravity.RIGHT));
         doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -229,7 +260,9 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                             if (frameLayout2.getTag() != null && commentTextView.length() > 0) {
                                 SendMessagesHelper.getInstance().sendMessage(commentTextView.getText().toString(), entry.getKey(), null, null, true, null, null, null);
                             }
-                            SendMessagesHelper.getInstance().sendMessage(arrayList, entry.getKey());
+                            if(noQuote)
+                                SendMessagesHelper.getInstance().processForwardFromMyNameCaptionized(sendingMessageObject, entry.getKey(), true);
+                            else  SendMessagesHelper.getInstance().sendMessage(arrayList, entry.getKey());
                         }
                     } else if (sendingText != null) {
                         for (HashMap.Entry<Long, TLRPC.TL_dialog> entry : selectedDialogs.entrySet()) {
@@ -241,6 +274,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                     }
                     dismiss();
                 }
+                onDone();
             }
         });
 
@@ -266,7 +300,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogIcon), PorterDuff.Mode.MULTIPLY));
         imageView.setScaleType(ImageView.ScaleType.CENTER);
         imageView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
-        frameLayout.addView(imageView, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.CENTER_VERTICAL));
+        frameLayout.addView(imageView, LayoutHelper.createFrame(48, 48, Gravity.LEFT | Gravity.TOP));
 
         nameTextView = new EditText(context);
         nameTextView.setHint(LocaleController.getString("ShareSendTo", R.string.ShareSendTo));
@@ -280,7 +314,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         nameTextView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         AndroidUtilities.clearCursorDrawable(nameTextView);
         nameTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
-        frameLayout.addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 48, 2, 96, 0));
+        frameLayout.addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.TOP | Gravity.LEFT, 48, 2, 96, 0));
         nameTextView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -300,6 +334,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                         topBeforeSwitch = getCurrentTop();
                         gridView.setAdapter(searchAdapter);
                         searchAdapter.notifyDataSetChanged();
+                        resolveTabsPosition();
                     }
                     if (searchEmptyView != null) {
                         searchEmptyView.setText(LocaleController.getString("NoResult", R.string.NoResult));
@@ -313,6 +348,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                         if (top > 0) {
                             layoutManager.scrollToPositionWithOffset(0, -top);
                         }
+                        resolveTabsPosition();
                     }
                 }
                 if (searchAdapter != null) {
@@ -320,6 +356,18 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                 }
             }
         });
+
+        if(showShareTabs){
+            tabsWidget=new TabsWidget(context, true){
+                @Override
+                public void selectTab(int index) {
+                    super.selectTab(index);
+                    listAdapter.currentTab=index;
+                    listAdapter.fetchDialogs();
+                }
+            };
+            frameLayout.addView(tabsWidget, LayoutHelper.createFrame(-1,40, Gravity.BOTTOM, 0, 0, 0, 0));
+        }
 
         gridView = new RecyclerListView(context);
         gridView.setTag(13);
@@ -342,7 +390,7 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                 }
             }
         });
-        containerView.addView(gridView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 48, 0, 0));
+        containerView.addView(gridView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 48+(showShareTabs?40:0), 0, 0));
         gridView.setAdapter(listAdapter = new ShareDialogsAdapter(context));
         gridView.setGlowColor(Theme.getColor(Theme.key_dialogScrollGlow));
         gridView.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
@@ -385,11 +433,11 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         gridView.setEmptyView(searchEmptyView);
         containerView.addView(searchEmptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, 0, 48, 0, 0));
 
-        containerView.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.LEFT | Gravity.TOP));
+        containerView.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48+(showShareTabs ? 40 : 0), Gravity.LEFT | Gravity.TOP));
 
         shadow = new View(context);
         shadow.setBackgroundResource(R.drawable.header_shadow);
-        containerView.addView(shadow, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, Gravity.TOP | Gravity.LEFT, 0, 48, 0, 0));
+        containerView.addView(shadow, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3, Gravity.TOP | Gravity.LEFT, 0, 48+(showShareTabs?40:0), 0, 0));
 
         frameLayout2 = new FrameLayout(context);
         frameLayout2.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground));
@@ -550,6 +598,8 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         }
     }
 
+    public void onDone(){}
+
     @Override
     public void dismiss() {
         super.dismiss();
@@ -561,16 +611,25 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         private Context context;
         private int currentCount;
         private ArrayList<TLRPC.TL_dialog> dialogs = new ArrayList<>();
+        public int currentTab;
 
         public ShareDialogsAdapter(Context context) {
             this.context = context;
+            currentTab=showShareTabs ? 0 : -1;
             fetchDialogs();
         }
 
         public void fetchDialogs() {
             dialogs.clear();
-            for (int a = 0; a < MessagesController.getInstance().dialogsServerOnly.size(); a++) {
-                TLRPC.TL_dialog dialog = MessagesController.getInstance().dialogsServerOnly.get(a);
+//            TabsController tabs=MessagesController.getInstance().tabsController;
+            List<TLRPC.TL_dialog> srcDialogs;
+            if(currentTab==-1){
+                srcDialogs=MessagesController.getInstance().dialogsServerOnly;
+            }else{
+                srcDialogs=Tosan.getDialogsArray(currentTab+3, false);
+            }
+            for (int a = 0; a < srcDialogs.size(); a++) {
+                TLRPC.TL_dialog dialog = srcDialogs.get(a);
                 int lower_id = (int) dialog.id;
                 int high_id = (int) (dialog.id >> 32);
                 if (lower_id != 0 && high_id != 1) {

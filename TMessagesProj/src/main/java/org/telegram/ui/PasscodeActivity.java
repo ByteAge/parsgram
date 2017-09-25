@@ -89,6 +89,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     private int autoLockDetailRow;
     private int rowCount;
 
+    private PasscodeDelegate delegate;
+
     private final static int done_button = 1;
     private final static int pin_item = 2;
     private final static int password_item = 3;
@@ -96,6 +98,10 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
     public PasscodeActivity(int type) {
         super();
         this.type = type;
+    }
+
+    public void setDelegate(PasscodeDelegate delegate) {
+        this.delegate = delegate;
     }
 
     @Override
@@ -153,7 +159,8 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
             titleTextView = new TextView(context);
             titleTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText6));
             if (type == 1) {
-                if (UserConfig.passcodeHash.length() != 0) {
+                boolean overriding=delegate!=null&&delegate.isOverridingPassword() || UserConfig.passcodeHash.length() != 0;
+                if (overriding) {
                     titleTextView.setText(LocaleController.getString("EnterNewPasscode", R.string.EnterNewPasscode));
                 } else {
                     titleTextView.setText(LocaleController.getString("EnterNewFirstPasscode", R.string.EnterNewFirstPasscode));
@@ -485,13 +492,14 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 dropDown.setText(LocaleController.getString("PasscodePassword", R.string.PasscodePassword));
             }
         }
-        if (type == 1 && currentPasswordType == 0 || type == 2 && UserConfig.passcodeType == 0) {
+        int passcodeType=delegate!=null ? delegate.getPasswordType() : UserConfig.passcodeType;
+        if (type == 1 && currentPasswordType == 0 || type == 2 && passcodeType == 0) {
             InputFilter[] filterArray = new InputFilter[1];
             filterArray[0] = new InputFilter.LengthFilter(4);
             passwordEditText.setFilters(filterArray);
             passwordEditText.setInputType(InputType.TYPE_CLASS_PHONE);
             passwordEditText.setKeyListener(DigitsKeyListener.getInstance("1234567890"));
-        } else if (type == 1 && currentPasswordType == 1 || type == 2 && UserConfig.passcodeType == 1) {
+        } else if (type == 1 && currentPasswordType == 1 || type == 2 && passcodeType == 1) {
             passwordEditText.setFilters(new InputFilter[0]);
             passwordEditText.setKeyListener(null);
             passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -533,27 +541,43 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 return;
             }
 
-            try {
-                UserConfig.passcodeSalt = new byte[16];
-                Utilities.random.nextBytes(UserConfig.passcodeSalt);
-                byte[] passcodeBytes = firstPassword.getBytes("UTF-8");
-                byte[] bytes = new byte[32 + passcodeBytes.length];
-                System.arraycopy(UserConfig.passcodeSalt, 0, bytes, 0, 16);
-                System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
-                System.arraycopy(UserConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                UserConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
-            } catch (Exception e) {
-                FileLog.e(e);
+            if(delegate!=null){
+                delegate.done(firstPassword, currentPasswordType);
+                finishFragment();
+                passwordEditText.clearFocus();
+                AndroidUtilities.hideKeyboard(passwordEditText);
+            }else{
+                try {
+                    UserConfig.passcodeSalt = new byte[16];
+                    Utilities.random.nextBytes(UserConfig.passcodeSalt);
+                    byte[] passcodeBytes = firstPassword.getBytes("UTF-8");
+                    byte[] bytes = new byte[32 + passcodeBytes.length];
+                    System.arraycopy(UserConfig.passcodeSalt, 0, bytes, 0, 16);
+                    System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
+                    System.arraycopy(UserConfig.passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
+                    UserConfig.passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+
+                UserConfig.passcodeType = currentPasswordType;
+                UserConfig.saveConfig(false);
+                finishFragment();
+                NotificationCenter.getInstance().postNotificationName(NotificationCenter.didSetPasscode);
+                passwordEditText.clearFocus();
+                AndroidUtilities.hideKeyboard(passwordEditText);
             }
 
-            UserConfig.passcodeType = currentPasswordType;
-            UserConfig.saveConfig(false);
-            finishFragment();
-            NotificationCenter.getInstance().postNotificationName(NotificationCenter.didSetPasscode);
-            passwordEditText.clearFocus();
-            AndroidUtilities.hideKeyboard(passwordEditText);
+
         } else if (type == 2) {
-            if (!UserConfig.checkPasscode(passwordEditText.getText().toString())) {
+
+            if(delegate!=null){
+                if (!delegate.checkPasscode(passwordEditText.getText().toString())) {
+                    passwordEditText.setText("");
+                    onPasscodeError();
+                    return;
+                }
+            } else if (!UserConfig.checkPasscode(passwordEditText.getText().toString())) {
                 passwordEditText.setText("");
                 onPasscodeError();
                 return;
@@ -744,5 +768,12 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                 new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow),
                 new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4),
         };
+    }
+
+    public interface PasscodeDelegate{
+        boolean isOverridingPassword();
+        int getPasswordType();
+        void done(String password, int passcodeType);
+        boolean checkPasscode(String passcode);
     }
 }

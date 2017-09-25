@@ -37,6 +37,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
+import org.tosan.messenger.Tosan;
 
 import java.util.ArrayList;
 
@@ -766,20 +767,21 @@ public class DialogCell extends BaseCell {
         isSelected = value;
     }
 
-    private ArrayList<TLRPC.TL_dialog> getDialogsArray() {
-        if (dialogsType == 0) {
-            return MessagesController.getInstance().dialogs;
-        } else if (dialogsType == 1) {
-            return MessagesController.getInstance().dialogsServerOnly;
-        } else if (dialogsType == 2) {
-            return MessagesController.getInstance().dialogsGroupsOnly;
-        }
-        return null;
+    public ArrayList<TLRPC.TL_dialog> getDialogsArray(boolean hidden) {
+        return Tosan.getDialogsArray(dialogsType, hidden);
+//        if (dialogsType == 0) {
+//            return MessagesController.getInstance().dialogs;
+//        } else if (dialogsType == 1) {
+//            return MessagesController.getInstance().dialogsServerOnly;
+//        } else if (dialogsType == 2) {
+//            return MessagesController.getInstance().dialogsGroupsOnly;
+//        }
+//        return null;
     }
 
-    public void checkCurrentDialogIndex() {
-        if (index < getDialogsArray().size()) {
-            TLRPC.TL_dialog dialog = getDialogsArray().get(index);
+    public void checkCurrentDialogIndex(boolean hidden) {
+        if (index < getDialogsArray(hidden).size()) {
+            TLRPC.TL_dialog dialog = getDialogsArray(hidden).get(index);
             TLRPC.DraftMessage newDraftMessage = DraftQuery.getDraft(currentDialogId);
             MessageObject newMessageObject = MessagesController.getInstance().dialogMessage.get(dialog.id);
             if (currentDialogId != dialog.id ||
@@ -962,10 +964,14 @@ public class DialogCell extends BaseCell {
             canvas.restore();
         }
 
-        canvas.save();
-        canvas.translate(timeLeft, timeTop);
-        timeLayout.draw(canvas);
-        canvas.restore();
+        if(customDialog==null || customDialog.date!=0){
+            // this is a cat-item
+            // so do not draw date
+            canvas.save();
+            canvas.translate(timeLeft, timeTop);
+            timeLayout.draw(canvas);
+            canvas.restore();
+        }
 
         if (messageLayout != null) {
             canvas.save();

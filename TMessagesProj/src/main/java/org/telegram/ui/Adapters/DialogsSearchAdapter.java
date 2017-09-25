@@ -22,15 +22,15 @@ import org.telegram.SQLite.SQLitePreparedStatement;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.R;
 import org.telegram.messenger.query.SearchQuery;
 import org.telegram.messenger.support.widget.LinearLayoutManager;
 import org.telegram.messenger.support.widget.RecyclerView;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
 import org.telegram.tgnet.RequestDelegate;
@@ -44,6 +44,7 @@ import org.telegram.ui.Cells.HintDialogCell;
 import org.telegram.ui.Cells.LoadingCell;
 import org.telegram.ui.Cells.ProfileSearchCell;
 import org.telegram.ui.Components.RecyclerListView;
+import org.tosan.messenger.TabsController;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,6 +74,9 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     private int dialogsType;
     private SearchAdapterHelper searchAdapterHelper;
     private RecyclerListView innerListView;
+
+    public boolean isHiddenDialogs;
+    private TabsController tabs=MessagesController.getInstance().tabsController;
 
     private ArrayList<RecentSearchObject> recentSearchObjects = new ArrayList<>();
     private HashMap<Long, RecentSearchObject> recentSearchObjectsById = new HashMap<>();
@@ -118,7 +122,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             HintDialogCell cell = (HintDialogCell) holder.itemView;
 
             TLRPC.TL_topPeer peer = SearchQuery.hints.get(position);
-            TLRPC.TL_dialog dialog = new TLRPC.TL_dialog();
+//            TLRPC.TL_dialog dialog = new TLRPC.TL_dialog();
             TLRPC.Chat chat = null;
             TLRPC.User user = null;
             int did = 0;
@@ -134,7 +138,11 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
             }
             cell.setTag(did);
             String name = "";
-            if (user != null) {
+            cell.setEnabled(true);
+            if(!isHiddenDialogs && tabs.isHidden(did)){
+                name=LocaleController.getString("ProtectedChat", R.string.ProtectedChat);
+                cell.setEnabled(false);
+            }else if (user != null) {
                 name = ContactsController.formatName(user.first_name, user.last_name);
             } else if (chat != null) {
                 name = chat.title;
@@ -148,7 +156,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         }
     }
 
-    public DialogsSearchAdapter(Context context, int messagesSearch, int type) {
+    public DialogsSearchAdapter(Context context, int messagesSearch, int type, boolean hiddenDialogs) {
         searchAdapterHelper = new SearchAdapterHelper();
         searchAdapterHelper.setDelegate(new SearchAdapterHelper.SearchAdapterHelperDelegate() {
             @Override
@@ -171,6 +179,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         needMessagesSearch = messagesSearch;
         dialogsType = type;
         loadRecentSearch();
+        isHiddenDialogs = hiddenDialogs;
         SearchQuery.loadHints(true);
     }
 
@@ -258,6 +267,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                                     TLRPC.Message message = res.messages.get(a);
                                     searchResultMessages.add(new MessageObject(message, null, false));
                                     long dialog_id = MessageObject.getDialogId(message);
+                                    if(!isHiddenDialogs && tabs.isHidden(dialog_id))
+                                        continue;
                                     ConcurrentHashMap<Long, Integer> read_max = message.out ? MessagesController.getInstance().dialogs_read_outbox_max : MessagesController.getInstance().dialogs_read_inbox_max;
                                     Integer value = read_max.get(dialog_id);
                                     if (value == null) {
@@ -387,6 +398,18 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                         }
                     }
 
+                    if(!isHiddenDialogs){
+                        ArrayList<RecentSearchObject> removes=new ArrayList<>();
+                        for (RecentSearchObject rss :
+                                arrayList) {
+                            if(tabs.isHidden(rss.did)){
+                                removes.add(rss);
+                                hashMap.remove(rss.did);
+                            }
+                        }
+                        arrayList.removeAll(removes);
+                    }
+
                     Collections.sort(arrayList, new Comparator<RecentSearchObject>() {
                         @Override
                         public int compare(RecentSearchObject lhs, RecentSearchObject rhs) {
@@ -413,6 +436,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     public void putRecentSearch(final long did, TLObject object) {
+        if(!isHiddenDialogs && tabs.isHidden(did))
+            return;
         RecentSearchObject recentSearchObject = recentSearchObjectsById.get(did);
         if (recentSearchObject == null) {
             recentSearchObject = new RecentSearchObject();
@@ -512,6 +537,8 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                     SQLiteCursor cursor = MessagesStorage.getInstance().getDatabase().queryFinalized("SELECT did, date FROM dialogs ORDER BY date DESC LIMIT 600");
                     while (cursor.next()) {
                         long id = cursor.longValue(0);
+                        if(!isHiddenDialogs && tabs.isHidden(id))
+                            continue;
                         DialogSearchResult dialogSearchResult = new DialogSearchResult();
                         dialogSearchResult.date = cursor.intValue(1);
                         dialogsResult.put(id, dialogSearchResult);
@@ -784,19 +811,34 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 if (searchId != lastSearchId) {
                     return;
                 }
+                ArrayList<TLObject> removes=new ArrayList<>();
                 for (int a = 0; a < result.size(); a++) {
                     TLObject obj = result.get(a);
                     if (obj instanceof TLRPC.User) {
                         TLRPC.User user = (TLRPC.User) obj;
                         MessagesController.getInstance().putUser(user, true);
+                        if(!isHiddenDialogs && tabs.isHidden(user.id)){
+                            removes.add(user);
+                            names.remove(a);
+                        }
                     } else if (obj instanceof TLRPC.Chat) {
                         TLRPC.Chat chat = (TLRPC.Chat) obj;
                         MessagesController.getInstance().putChat(chat, true);
+                        if(!isHiddenDialogs && tabs.isHidden(chat.id)){
+                            removes.add(chat);
+                            names.remove(a);
+                        }
                     } else if (obj instanceof TLRPC.EncryptedChat) {
                         TLRPC.EncryptedChat chat = (TLRPC.EncryptedChat) obj;
                         MessagesController.getInstance().putEncryptedChat(chat, true);
+                        if(!isHiddenDialogs && tabs.isHidden(chat.id)){
+                            removes.add(chat);
+                            names.remove(a);
+                        }
                     }
                 }
+                if(!isHiddenDialogs)
+                    result.removeAll(removes);
                 MessagesController.getInstance().putUsers(encUsers, true);
                 searchResult = result;
                 searchResultNames = names;
@@ -1006,16 +1048,24 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 horizontalListView.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        if (delegate != null) {
-                            delegate.didPressedOnSubDialog((Integer) view.getTag());
+                        if (delegate != null && view.getTag()!=null) {
+                            int did= (int) view.getTag();
+                            if(!isHiddenDialogs && tabs.isHidden(did)){
+                                return;
+                            }
+                            delegate.didPressedOnSubDialog(did);
                         }
                     }
                 });
                 horizontalListView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position) {
-                        if (delegate != null) {
-                            delegate.needRemoveHint((Integer) view.getTag());
+                        if (delegate != null && view.getTag()!=null) {
+                            int did= (int) view.getTag();
+                            if(!isHiddenDialogs && tabs.isHidden(did)){
+                                return true;
+                            }
+                            delegate.needRemoveHint(did);
                         }
                         return true;
                     }

@@ -19,6 +19,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Cells.DialogCell;
 import org.telegram.ui.Cells.LoadingCell;
 import org.telegram.ui.Components.RecyclerListView;
+import org.tosan.messenger.Tosan;
 
 import java.util.ArrayList;
 
@@ -28,10 +29,12 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
     private int dialogsType;
     private long openedDialogId;
     private int currentCount;
+    public boolean isHiddenDialogs;
 
-    public DialogsAdapter(Context context, int type) {
+    public DialogsAdapter(Context context, int type, boolean hiddens) {
         mContext = context;
         dialogsType = type;
+        isHiddenDialogs=hiddens;
     }
 
     public void setOpenedDialogId(long id) {
@@ -43,15 +46,16 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
         return current != getItemCount() || current == 1;
     }
 
-    private ArrayList<TLRPC.TL_dialog> getDialogsArray() {
-        if (dialogsType == 0) {
-            return MessagesController.getInstance().dialogs;
-        } else if (dialogsType == 1) {
-            return MessagesController.getInstance().dialogsServerOnly;
-        } else if (dialogsType == 2) {
-            return MessagesController.getInstance().dialogsGroupsOnly;
-        }
-        return null;
+    public ArrayList<TLRPC.TL_dialog> getDialogsArray() {
+        return Tosan.getDialogsArray(dialogsType, isHiddenDialogs);
+//        if (dialogsType == 0) {
+//            return MessagesController.getInstance().dialogs;
+//        } else if (dialogsType == 1) {
+//            return MessagesController.getInstance().dialogsServerOnly;
+//        } else if (dialogsType == 2) {
+//            return MessagesController.getInstance().dialogsGroupsOnly;
+//        }
+//        return null;
     }
 
     @Override
@@ -78,7 +82,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
     @Override
     public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
         if (holder.itemView instanceof DialogCell) {
-            ((DialogCell) holder.itemView).checkCurrentDialogIndex();
+            ((DialogCell) holder.itemView).checkCurrentDialogIndex(isHiddenDialogs);
         }
     }
 
@@ -91,7 +95,12 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View view = null;
         if (viewType == 0) {
-            view = new DialogCell(mContext);
+            view = new DialogCell(mContext){
+                @Override
+                public ArrayList<TLRPC.TL_dialog> getDialogsArray(boolean hidden) {
+                    return DialogsAdapter.this.getDialogsArray();
+                }
+            };
         } else if (viewType == 1) {
             view = new LoadingCell(mContext);
         }
@@ -112,6 +121,10 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
             }
             cell.setDialog(dialog, i, dialogsType);
         }
+    }
+
+    public void setDialogsType(int dialogsType) {
+        this.dialogsType = dialogsType;
     }
 
     @Override

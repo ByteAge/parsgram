@@ -154,6 +154,11 @@ public class Theme {
     private static Drawable themedWallpaper;
     private static int themedWallpaperFileOffset;
 
+
+
+    public static final int MSG_TEXT_COLOR = 0xff000000;
+    public static final int MSG_RED_TEXT_COLOR = 0xffff0033;
+
     public static Paint dividerPaint;
     public static Paint linkSelectionPaint;
     public static Paint checkboxSquare_eraserPaint;

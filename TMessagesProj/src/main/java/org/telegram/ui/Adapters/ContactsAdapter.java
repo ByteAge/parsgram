@@ -47,6 +47,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
         isAdmin = arg4;
     }
 
+
     public void setCheckedMap(HashMap<Integer, ?> map) {
         checkedMap = map;
     }

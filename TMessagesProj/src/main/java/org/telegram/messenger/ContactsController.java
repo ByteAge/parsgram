@@ -23,6 +23,7 @@ import android.os.Build;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 
 import org.telegram.PhoneFormat.PhoneFormat;
@@ -30,6 +31,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.tosan.messenger.sql.UsersChangeUpdater;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -217,7 +219,7 @@ public class ContactsController {
         AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
         Account[] accounts;
         try {
-            accounts = am.getAccountsByType("org.telegram.account");
+            accounts = am.getAccountsByType("org.surena.account");
             if (accounts != null && accounts.length > 0) {
                 for (int a = 0; a < accounts.length; a++) {
                     am.removeAccount(accounts[a], null, null);
@@ -227,7 +229,7 @@ public class ContactsController {
             FileLog.e(e);
         }
 
-        accounts = am.getAccountsByType("org.telegram.messenger");
+        accounts = am.getAccountsByType("org.surena.parsgram");
         boolean recreateAccount = false;
         if (UserConfig.isClientActivated()) {
             if (accounts.length == 1) {
@@ -256,7 +258,7 @@ public class ContactsController {
             }
             if (UserConfig.isClientActivated()) {
                 try {
-                    currentAccount = new Account("" + UserConfig.getClientUserId(), "org.telegram.messenger");
+                    currentAccount = new Account("" + UserConfig.getClientUserId(), "org.surena.parsgram");
                     am.addAccountExplicitly(currentAccount, "", null);
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -268,7 +270,7 @@ public class ContactsController {
     public void deleteAllAppAccounts() {
         try {
             AccountManager am = AccountManager.get(ApplicationLoader.applicationContext);
-            Account[] accounts = am.getAccountsByType("org.telegram.messenger");
+            Account[] accounts = am.getAccountsByType("org.surena.parsgram");
             for (int a = 0; a < accounts.length; a++) {
                 am.removeAccount(accounts[a], null, null);
             }
@@ -547,6 +549,7 @@ public class ContactsController {
     }
 
     protected void performSyncPhoneBook(final HashMap<Integer, Contact> contactHashMap, final boolean request, final boolean first, final boolean schedule, final boolean force) {
+        Log.v("raminContacts", "performSyncPhoneBook");
         if (!first && !contactsBookLoaded) {
             return;
         }
@@ -924,6 +927,7 @@ public class ContactsController {
     }
 
     public void loadContacts(boolean fromCache, boolean cacheEmpty) {
+        Log.v("raminContacts", "loadContacts");
         synchronized (loadContactsSync) {
             loadingContacts = true;
         }
@@ -965,6 +969,7 @@ public class ContactsController {
     }
 
     public void processLoadedContacts(final ArrayList<TLRPC.TL_contact> contactsArr, final ArrayList<TLRPC.User> usersArr, final int from) {
+        Log.v("raminContacts", "processLoadedContacts");
         //from: 0 - from server, 1 - from db, 2 - from imported contacts
         AndroidUtilities.runOnUIThread(new Runnable() {
             @Override
@@ -1160,6 +1165,8 @@ public class ContactsController {
                                 } else {
                                     reloadContactsStatusesMaybe();
                                 }
+
+                                UsersChangeUpdater.updateChanges();
                             }
                         });
 
@@ -1265,6 +1272,7 @@ public class ContactsController {
     }
 
     private void buildContactsSectionsArrays(boolean sort) {
+        Log.v("raminContacts", "buildContactsSectionsArrays");
         if (sort) {
             Collections.sort(contacts, new Comparator<TLRPC.TL_contact>() {
                 @Override
@@ -1360,6 +1368,7 @@ public class ContactsController {
     }
 
     private void performWriteContactsToPhoneBookInternal(ArrayList<TLRPC.TL_contact> contactsArray) {
+        Log.v("raminContacts", "performWriteContactsToPhoneBookInternal");
         try {
             if (!hasContactsPermission()) {
                 return;
@@ -1387,6 +1396,7 @@ public class ContactsController {
     }
 
     private void performWriteContactsToPhoneBook() {
+        Log.v("raminContacts", "performWriteContactsToPhoneBook");
         final ArrayList<TLRPC.TL_contact> contactsArray = new ArrayList<>();
         contactsArray.addAll(contacts);
         Utilities.phoneBookQueue.postRunnable(new Runnable() {
@@ -1398,6 +1408,7 @@ public class ContactsController {
     }
 
     private void applyContactsUpdates(ArrayList<Integer> ids, ConcurrentHashMap<Integer, TLRPC.User> userDict, ArrayList<TLRPC.TL_contact> newC, ArrayList<Integer> contactsTD) {
+        Log.v("raminContacts", "applyContactsUpdates");
         if (newC == null || contactsTD == null) {
             newC = new ArrayList<>();
             contactsTD = new ArrayList<>();
@@ -1530,6 +1541,7 @@ public class ContactsController {
     }
 
     public void processContactsUpdates(ArrayList<Integer> ids, ConcurrentHashMap<Integer, TLRPC.User> userDict) {
+        Log.v("raminContacts", "processContactsUpdates");
         final ArrayList<TLRPC.TL_contact> newContacts = new ArrayList<>();
         final ArrayList<Integer> contactsToDelete = new ArrayList<>();
         for (Integer uid : ids) {
@@ -1821,6 +1833,7 @@ public class ContactsController {
     }
 
     public void reloadContactsStatuses() {
+        Log.v("raminContacts", "reloadContactsStatuses");
         saveContactsLoadTime();
         MessagesController.getInstance().clearFullUsers();
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);

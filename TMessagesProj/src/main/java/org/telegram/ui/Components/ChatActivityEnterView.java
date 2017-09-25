@@ -42,6 +42,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.util.Property;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -86,6 +87,7 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.DialogsActivity;
 import org.telegram.ui.StickersActivity;
+import org.tosan.messenger.Tosan;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -687,6 +689,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
     public ChatActivityEnterView(Activity context, SizeNotifierFrameLayout parent, ChatActivity fragment, final boolean isChat) {
         super(context);
 
+        MediaController.getInstance().setContext(context);
+
         dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         dotPaint.setColor(Theme.getColor(Theme.key_chat_emojiPanelNewTrending));
         setFocusable(true);
@@ -1217,6 +1221,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     if (recordCircle.isSendButtonVisible() || recordedAudioPanel.getVisibility() == VISIBLE) {
                         return false;
                     }
+                    Log.v("raminRecord", "onTouchUp "+recordAudioVideoRunnableStarted);
                     if (recordAudioVideoRunnableStarted) {
                         AndroidUtilities.cancelRunOnUIThread(recordAudioVideoRunnable);
                         delegate.onSwitchRecordMode(videoSendButton.getTag() == null);
@@ -1224,8 +1229,10 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                     } else if (!hasRecordVideo || calledRecordRunnable) {
                         startedDraggingX = -1;
                         if (hasRecordVideo && videoSendButton.getTag() != null) {
+                            Log.v("raminRecord", "needStartRefcVid 1");
                             delegate.needStartRecordVideo(1);
                         } else {
+                            Log.v("raminRecord", "needStartRecAud 0");
                             delegate.needStartRecordAudio(0);
                             MediaController.getInstance().stopRecording(1);
                         }
@@ -1984,16 +1991,21 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             checkSendButton(true);
             return;
         } else if (audioToSend != null) {
-            MessageObject playing = MediaController.getInstance().getPlayingMessageObject();
-            if (playing != null && playing == audioToSendMessageObject) {
-                MediaController.getInstance().cleanupPlayer(true, true);
-            }
-            SendMessagesHelper.getInstance().sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, null, null, 0);
-            if (delegate != null) {
-                delegate.onMessageSend(null);
-            }
-            hideRecordedAudioPanel();
-            checkSendButton(true);
+            Tosan.showMediaSendConfirmation(getContext(), new Runnable() {
+                @Override
+                public void run() {
+                    MessageObject playing = MediaController.getInstance().getPlayingMessageObject();
+                    if (playing != null && playing == audioToSendMessageObject) {
+                        MediaController.getInstance().cleanupPlayer(true, true);
+                    }
+                    SendMessagesHelper.getInstance().sendMessage(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, null, null, 0);
+                    if (delegate != null) {
+                        delegate.onMessageSend(null);
+                    }
+                    hideRecordedAudioPanel();
+                    checkSendButton(true);
+                }
+            });
             return;
         }
         CharSequence message = messageEditText.getText();
@@ -2988,6 +3000,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         return view == recordCircle;
     }
 
+
     private void createEmojiView() {
         if (emojiView != null) {
             return;
@@ -3021,14 +3034,19 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 }
             }
 
-            public void onStickerSelected(TLRPC.Document sticker) {
-                if(stickersExpanded)
-                    setStickersExpanded(false, true);
-                ChatActivityEnterView.this.onStickerSelected(sticker);
-                StickersQuery.addRecentSticker(StickersQuery.TYPE_IMAGE, sticker, (int) (System.currentTimeMillis() / 1000));
-                if ((int) dialog_id == 0) {
-                    MessagesController.getInstance().saveGif(sticker);
-                }
+            public void onStickerSelected(final TLRPC.Document sticker) {
+                Tosan.showMediaSendConfirmation(getContext(), new Runnable() {
+                    @Override
+                    public void run() {
+                        if(stickersExpanded)
+                            setStickersExpanded(false, true);
+                        ChatActivityEnterView.this.onStickerSelected(sticker);
+                        StickersQuery.addRecentSticker(StickersQuery.TYPE_IMAGE, sticker, (int) (System.currentTimeMillis() / 1000));
+                        if ((int) dialog_id == 0) {
+                            MessagesController.getInstance().saveGif(sticker);
+                        }
+                    }
+                });
             }
 
             @Override
@@ -3039,17 +3057,23 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
 
             @Override
-            public void onGifSelected(TLRPC.Document gif) {
-				if(stickersExpanded)
-				    setStickersExpanded(false, true);
-                SendMessagesHelper.getInstance().sendSticker(gif, dialog_id, replyingMessageObject);
-                StickersQuery.addRecentGif(gif, (int) (System.currentTimeMillis() / 1000));
-                if ((int) dialog_id == 0) {
-                    MessagesController.getInstance().saveGif(gif);
-                }
-                if (delegate != null) {
-                    delegate.onMessageSend(null);
-                }
+            public void onGifSelected(final TLRPC.Document gif) {
+                Tosan.showMediaSendConfirmation(getContext(), new Runnable() {
+                    @Override
+                    public void run() {
+                        if(stickersExpanded)
+                            setStickersExpanded(false, true);
+                        SendMessagesHelper.getInstance().sendSticker(gif, dialog_id, replyingMessageObject);
+                        StickersQuery.addRecentGif(gif, (int) (System.currentTimeMillis() / 1000));
+                        if ((int) dialog_id == 0) {
+                            MessagesController.getInstance().saveGif(gif);
+                        }
+                        if (delegate != null) {
+                            delegate.onMessageSend(null);
+                        }
+                    }
+                });
+
             }
 
             @Override

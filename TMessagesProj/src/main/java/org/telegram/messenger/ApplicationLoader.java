@@ -24,6 +24,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.support.multidex.MultiDex;
 import android.util.Base64;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -33,6 +34,8 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.ForegroundDetector;
+import org.tosan.messenger.SmartSecretary;
+import org.tosan.messenger.Tosan;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -196,10 +199,19 @@ public class ApplicationLoader extends Application {
         MediaController.getInstance();
     }
 
+    private static ApplicationLoader instance;
+    public static SmartSecretary smartSecretary;
+
+    public static ApplicationLoader getInstance() {
+        return instance;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
 
+        instance=this;
+        Tosan.init(this);
         applicationContext = getApplicationContext();
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
         ConnectionsManager.native_setJava(Build.VERSION.SDK_INT == 14 || Build.VERSION.SDK_INT == 15);
@@ -208,6 +220,14 @@ public class ApplicationLoader extends Application {
         applicationHandler = new Handler(applicationContext.getMainLooper());
 
         startPushService();
+
+        smartSecretary=new SmartSecretary();
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 
     /*public static void sendRegIdToBackend(final String token) {

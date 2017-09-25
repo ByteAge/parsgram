@@ -40,25 +40,26 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.PhoneFormat.PhoneFormat;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLoader;
+import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NativeCrashManager;
-import org.telegram.messenger.SendMessagesHelper;
-import org.telegram.messenger.UserObject;
-import org.telegram.messenger.Utilities;
-import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
+import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.camera.CameraController;
 import org.telegram.messenger.query.DraftQuery;
@@ -67,12 +68,12 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
-import org.telegram.messenger.UserConfig;
-import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.Adapters.DrawerLayoutAdapter;
 import org.telegram.ui.ActionBar.ActionBarLayout;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.DrawerLayoutContainer;
+import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Adapters.DrawerLayoutAdapter;
 import org.telegram.ui.Cells.LanguageCell;
 import org.telegram.ui.Components.EmbedBottomSheet;
 import org.telegram.ui.Components.JoinGroupAlert;
@@ -81,8 +82,16 @@ import org.telegram.ui.Components.PasscodeView;
 import org.telegram.ui.Components.PipRoundVideoView;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.StickersAlert;
-import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.ThemeEditorView;
+import org.tosan.messenger.Tosan;
+import org.tosan.messenger.sql.UsersChangeUpdater;
+import org.tosan.messenger.ui.fragments.AboutActivity;
+import org.tosan.messenger.ui.fragments.CategoryManagementActivity;
+import org.tosan.messenger.ui.fragments.ContactsChangesActivity;
+import org.tosan.messenger.ui.fragments.IdFinderFragment;
+import org.tosan.messenger.ui.fragments.OnlineContactsActivity;
+import org.tosan.messenger.ui.fragments.ParsgramSettingsActivity;
+import org.tosan.messenger.ui.fragments.ReportHelpActivity;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -165,6 +174,8 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     return;
                 }
             }
+        }else{
+            UsersChangeUpdater.updateChanges();
         }
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -418,6 +429,36 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 } else if (id == 10) {
                     presentFragment(new CallLogActivity());
                     drawerLayoutContainer.closeDrawer(false);
+                }else if (id == 20) {
+                    presentFragment(new IdFinderFragment());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if (id == 21) {
+                    presentFragment(new ReportHelpActivity());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 23){
+                    presentFragment(new ParsgramSettingsActivity());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 24){
+                    presentFragment(new OnlineContactsActivity(null));
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 25){
+                    presentFragment(new CategoryManagementActivity());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 26){
+                    Browser.openUrl(LaunchActivity.this, "https://t.me/joinchat/AAAAAELcZvYQklCyTUVfdw");
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 27){
+                    presentFragment(new AboutActivity());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 28){
+                    // present contacts changes
+                    presentFragment(new ContactsChangesActivity());
+                    drawerLayoutContainer.closeDrawer(false);
+                }else if(id == 29){
+                    Intent d=new Intent(LaunchActivity.this, ManageSpaceActivity.class);
+                    d.putExtra("close-other-apps", false);
+                    startActivity(d);
+                    drawerLayoutContainer.closeDrawer(false);
                 }
             }
         });
@@ -430,6 +471,41 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         Theme.loadWallpaper();
 
         passcodeView = new PasscodeView(this);
+        passcodeView.setDelegate(new PasscodeView.PasscodeViewDelegate() {
+            @Override
+            public void didAcceptedPassword() {
+                UserConfig.appLocked = false;
+                UserConfig.saveConfig(false);
+                NotificationCenter.getInstance().postNotificationName(NotificationCenter.didSetPasscode);
+                UserConfig.isWaitingForPasscodeEnter = false;
+
+                if (passcodeSaveIntent != null) {
+                    handleIntent(passcodeSaveIntent, passcodeSaveIntentIsNew, passcodeSaveIntentIsRestore, true);
+                    passcodeSaveIntent = null;
+                }
+                drawerLayoutContainer.setAllowOpenDrawer(true, false);
+                actionBarLayout.showLastFragment();
+                if (AndroidUtilities.isTablet()) {
+                    layersActionBarLayout.showLastFragment();
+                    rightActionBarLayout.showLastFragment();
+                }
+            }
+
+            @Override
+            public boolean checkPasscode(String password) {
+                return UserConfig.checkPasscode(password);
+            }
+
+            @Override
+            public int getPasswordType() {
+                return UserConfig.passcodeType;
+            }
+
+            @Override
+            public boolean useFingerPrint() {
+                return UserConfig.useFingerprint;
+            }
+        });
         drawerLayoutContainer.addView(passcodeView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         NotificationCenter.getInstance().postNotificationName(NotificationCenter.closeOtherAppActivities, this);
@@ -455,6 +531,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 dialogsActivity.setSideMenu(sideMenu);
                 actionBarLayout.addFragmentToStack(dialogsActivity);
                 drawerLayoutContainer.setAllowOpenDrawer(true, false);
+                UsersChangeUpdater.updateChanges();
             }
 
             try {
@@ -576,6 +653,32 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             FileLog.e(e);
         }
         MediaController.getInstance().setBaseActivity(this, true);
+
+//        Intent d=new Intent(this, NotifPopupActivity.class);
+//        d.putExtra("title", "MyTitle");
+//        d.putExtra("content", "MyContent");
+//        d.putExtra("url", "https://t.me/RbtAsd");
+//        d.putExtra("img-url", "https://www.google.com.ua/images/branding/googlelogo/2x/googlelogo_color_120x44dp.png");
+//        startActivity(d);
+
+        if(UserConfig.isClientActivated()){
+            if(!Tosan.prefs.getBoolean("join-pg-chan-shown", false)){
+                // check shown or not
+                new AlertDialog.Builder(this)
+                        .setTitle(LocaleController.getString("AppName", R.string.AppName))
+                        .setMessage("آیا می خواهید در کانال پارس گرام عضو شوید؟")
+                        .setNegativeButton(LocaleController.getString("No", R.string.No), null)
+                        .setPositiveButton(LocaleController.getString("Yes", R.string.Yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Browser.openUrl(LaunchActivity.this, "https://t.me/joinchat/AAAAAELcZvYQklCyTUVfdw");
+                            }
+                        })
+                        .show();
+                Tosan.prefs.edit().putBoolean("join-pg-chan-shown", true).apply();
+            }
+
+        }
     }
 
     private void checkLayout() {
@@ -642,22 +745,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         passcodeView.onShow();
         UserConfig.isWaitingForPasscodeEnter = true;
         drawerLayoutContainer.setAllowOpenDrawer(false, false);
-        passcodeView.setDelegate(new PasscodeView.PasscodeViewDelegate() {
-            @Override
-            public void didAcceptedPassword() {
-                UserConfig.isWaitingForPasscodeEnter = false;
-                if (passcodeSaveIntent != null) {
-                    handleIntent(passcodeSaveIntent, passcodeSaveIntentIsNew, passcodeSaveIntentIsRestore, true);
-                    passcodeSaveIntent = null;
-                }
-                drawerLayoutContainer.setAllowOpenDrawer(true, false);
-                actionBarLayout.showLastFragment();
-                if (AndroidUtilities.isTablet()) {
-                    layersActionBarLayout.showLastFragment();
-                    rightActionBarLayout.showLastFragment();
-                }
-            }
-        });
     }
 
     private class VcardData {
@@ -1115,7 +1202,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                 }
                             }
                         }
-                    } else if (intent.getAction().equals("org.telegram.messenger.OPEN_ACCOUNT")) {
+                    } else if (intent.getAction().equals("org.surena.parsgram.OPEN_ACCOUNT")) {
                         open_settings = 1;
                     } else if (intent.getAction().equals("new_dialog")) {
                         open_new_dialog = 1;

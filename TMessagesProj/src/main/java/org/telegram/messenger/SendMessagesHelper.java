@@ -771,7 +771,29 @@ public class SendMessagesHelper implements NotificationCenter.NotificationCenter
         }
         SendMessagesHelper.getInstance().sendMessage((TLRPC.TL_document) document, null, null, peer, replyingMessageObject, null, null, 0);
     }
-
+    public void processForwardFromMyNameCaptionized(MessageObject messageObject, long did, boolean includeCaption){
+        if(includeCaption){
+            TLRPC.MessageMedia media=messageObject.messageOwner.media;
+            if(media!=null){
+                if(media.photo!=null){
+                    if(media.caption!=null){
+                        media.photo.caption=media.caption;
+                    }
+                }
+                if(media.video_unused!=null){
+                    if(media.caption!=null){
+                        media.video_unused.caption=media.caption;
+                    }
+                }
+                if(media.document!=null){
+                    if(media.caption!=null){
+                        media.document.caption=media.caption;
+                    }
+                }
+            }
+        }
+        processForwardFromMyName(messageObject, did);
+    }
     public int sendMessage(ArrayList<MessageObject> messages, final long peer) {
         if (messages == null || messages.isEmpty()) {
             return 0;
